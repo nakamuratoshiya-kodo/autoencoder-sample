@@ -19,8 +19,8 @@ TRAINING_CONFIG = {
 
 # データ設定
 DATA_CONFIG = {
-    "train_dir": "./data_ex2/train",
-    "test_dir": "./data_ex/test",
+    "train_dir": "./data/train",
+    "test_dir": "./data/test",
     "normalize": True,  # True: 正規化, False: 正規化なし
     "image_size": (128, 128),
     "grayscale": False  # True: モノクロ画像, False: カラー画像
