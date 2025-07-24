@@ -38,3 +38,10 @@ ANOMALY_CONFIG = {
     "threshold": None,
     "threshold_method": "mean+3std"
 }
+
+# 乱数シード設定
+SEED_CONFIG = {
+    "seed": 42,
+    "deterministic": True,  # 完全な再現性を優先（速度低下あり）
+    "benchmark": False      # 高速化したい場合はTrue（再現性は落ちる）
+}

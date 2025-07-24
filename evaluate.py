@@ -1,10 +1,11 @@
 # evaluate.py
 # 評価スクリプト（MLflow切替・進捗バー・カラー/グレースケール対応）
-
+import numpy as np
+import random
 import torch
 from models.autoencoder import ConvAutoencoder
 from utils import get_image_dataloader
-from config import MODEL_CONFIG, DATA_CONFIG, ANOMALY_CONFIG, MLFLOW_CONFIG
+from config import MODEL_CONFIG, DATA_CONFIG, ANOMALY_CONFIG, MLFLOW_CONFIG,SEED_CONFIG
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -21,8 +22,22 @@ if DATA_CONFIG["grayscale"]:
     MODEL_CONFIG["input_shape"] = (1, *DATA_CONFIG["image_size"])
 else:
     MODEL_CONFIG["input_shape"] = (3, *DATA_CONFIG["image_size"])
+def set_seed(seed, deterministic=True, benchmark=False):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    torch.backends.cudnn.deterministic = deterministic
+    torch.backends.cudnn.benchmark = benchmark
 
 def evaluate():
+    set_seed(
+        seed=SEED_CONFIG["seed"],
+        deterministic=SEED_CONFIG["deterministic"],
+        benchmark=SEED_CONFIG["benchmark"]
+    )
     if MLFLOW_CONFIG["use_mlflow"]:
         mlflow.set_tracking_uri(MLFLOW_CONFIG["tracking_uri"])
         mlflow.set_experiment(MLFLOW_CONFIG["experiment_name"])

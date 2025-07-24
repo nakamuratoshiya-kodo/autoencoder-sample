@@ -1,12 +1,13 @@
 # train.py
 # オートエンコーダの学習スクリプト（MLflow切替・進捗バー・カラー/グレースケール対応）
-
+import numpy as np
+import random
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from models.autoencoder import ConvAutoencoder
 from utils import get_image_dataloader
-from config import MODEL_CONFIG, TRAINING_CONFIG, DATA_CONFIG, MLFLOW_CONFIG
+from config import MODEL_CONFIG, TRAINING_CONFIG, DATA_CONFIG, MLFLOW_CONFIG, SEED_CONFIG
 from tqdm import tqdm
 
 if MLFLOW_CONFIG["use_mlflow"]:
@@ -21,7 +22,22 @@ if DATA_CONFIG["grayscale"]:
 else:
     MODEL_CONFIG["input_shape"] = (3, *DATA_CONFIG["image_size"])
 
+def set_seed(seed, deterministic=True, benchmark=False):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    torch.backends.cudnn.deterministic = deterministic
+    torch.backends.cudnn.benchmark = benchmark
+
 def train():
+    set_seed(
+        seed=SEED_CONFIG["seed"],
+        deterministic=SEED_CONFIG["deterministic"],
+        benchmark=SEED_CONFIG["benchmark"]
+    )
     if MLFLOW_CONFIG["use_mlflow"]:
         mlflow.set_tracking_uri(MLFLOW_CONFIG["tracking_uri"])
         mlflow.set_experiment(MLFLOW_CONFIG["experiment_name"])
@@ -86,3 +102,4 @@ def dummy_context():
 
 if __name__ == "__main__":
     train()
+
