@@ -36,6 +36,7 @@ def evaluate():
         model = ConvAutoencoder(
             input_shape=MODEL_CONFIG["input_shape"],
             latent_dim=MODEL_CONFIG["latent_dim"],
+            hidden_dims=MODEL_CONFIG["hidden_dims"],  # ← これを忘れずに！
             activation=MODEL_CONFIG["activation"]
         ).to(device)
         model.load_state_dict(torch.load("autoencoder_model.pt"))
