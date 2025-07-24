@@ -14,30 +14,52 @@ def get_activation(name):
     return activations.get(name, nn.ReLU())
 
 class ConvAutoencoder(nn.Module):
-    def __init__(self, input_shape, latent_dim, activation="ReLU"):
+    def __init__(self, input_shape, latent_dim, hidden_dims, activation="ReLU"):
         super(ConvAutoencoder, self).__init__()
         channels, height, width = input_shape
         act_fn = get_activation(activation)
 
-        self.encoder = nn.Sequential(
-            nn.Conv2d(channels, 32, kernel_size=3, stride=2, padding=1),
+        # -------------------------------
+        # エンコーダ構築 (hidden_dims参照)
+        # -------------------------------
+        encoder_layers = []
+        in_channels = channels
+        for h_dim in hidden_dims:
+            encoder_layers.append(nn.Conv2d(in_channels, h_dim, kernel_size=3, stride=2, padding=1))
+            encoder_layers.append(act_fn)
+            in_channels = h_dim
+        self.encoder = nn.Sequential(*encoder_layers, nn.Flatten())
+
+        # 潜在空間
+        self.flatten_dim = (height // 2 ** len(hidden_dims)) * (width // 2 ** len(hidden_dims)) * hidden_dims[-1]
+        self.latent = nn.Sequential(
+            nn.Linear(self.flatten_dim, latent_dim),
             act_fn,
-            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-            act_fn,
-            nn.Flatten(),
-            nn.Linear((height//4)*(width//4)*64, latent_dim),
+            nn.Linear(latent_dim, self.flatten_dim),
+            act_fn
         )
 
-        self.decoder = nn.Sequential(
-            nn.Linear(latent_dim, (height//4)*(width//4)*64),
-            nn.Unflatten(1, (64, height//4, width//4)),
-            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
-            act_fn,
-            nn.ConvTranspose2d(32, channels, kernel_size=3, stride=2, padding=1, output_padding=1),
-            nn.Sigmoid(),
-        )
+        # -------------------------------
+        # デコーダ構築 (hidden_dimsの逆順)
+        # -------------------------------
+        decoder_layers = []
+        out_channels_list = list(reversed(hidden_dims))
+        self.decoder_input = nn.Unflatten(1, (out_channels_list[0], height // 2 ** len(hidden_dims), width // 2 ** len(hidden_dims)))
+        in_channels = out_channels_list[0]
+        for h_dim in out_channels_list[1:]:
+            decoder_layers.append(nn.ConvTranspose2d(in_channels, h_dim, kernel_size=3, stride=2, padding=1, output_padding=1))
+            decoder_layers.append(act_fn)
+            in_channels = h_dim
+
+        # 最終出力層
+        decoder_layers.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=3, stride=2, padding=1, output_padding=1))
+        decoder_layers.append(nn.Sigmoid())  # 出力を [0,1] に
+
+        self.decoder = nn.Sequential(*decoder_layers)
 
     def forward(self, x):
-        latent = self.encoder(x)
-        reconstructed = self.decoder(latent)
-        return reconstructed
+        z = self.encoder(x)
+        z = self.latent(z)
+        z = self.decoder_input(z)
+        x_recon = self.decoder(z)
+        return x_recon

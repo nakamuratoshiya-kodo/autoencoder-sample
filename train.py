@@ -41,6 +41,7 @@ def train():
         model = ConvAutoencoder(
             input_shape=MODEL_CONFIG["input_shape"],
             latent_dim=MODEL_CONFIG["latent_dim"],
+            hidden_dims=MODEL_CONFIG["hidden_dims"],
             activation=MODEL_CONFIG["activation"]
         ).to(device)
 
