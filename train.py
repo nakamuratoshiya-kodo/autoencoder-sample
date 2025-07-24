@@ -31,18 +31,19 @@ def train():
 
     with mlflow_context if mlflow_context else dummy_context():
         train_loader = get_image_dataloader(
-            DATA_CONFIG["train_dir"],
-            TRAINING_CONFIG["batch_size"],
-            DATA_CONFIG["image_size"],
-            DATA_CONFIG["grayscale"],
-            DATA_CONFIG["normalize"]
+            data_dir=DATA_CONFIG["train_dir"],
+            batch_size=TRAINING_CONFIG["batch_size"],
+            image_size=DATA_CONFIG["image_size"],
+            grayscale=DATA_CONFIG["grayscale"],
+            normalize=DATA_CONFIG["normalize"],
         )
 
         model = ConvAutoencoder(
             input_shape=MODEL_CONFIG["input_shape"],
             latent_dim=MODEL_CONFIG["latent_dim"],
             hidden_dims=MODEL_CONFIG["hidden_dims"],
-            activation=MODEL_CONFIG["activation"]
+            activation=MODEL_CONFIG["activation"],
+            normalize=DATA_CONFIG["normalize"]
         ).to(device)
 
         criterion = nn.MSELoss()

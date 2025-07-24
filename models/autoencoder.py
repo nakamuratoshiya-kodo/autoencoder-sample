@@ -14,7 +14,7 @@ def get_activation(name):
     return activations.get(name, nn.ReLU())
 
 class ConvAutoencoder(nn.Module):
-    def __init__(self, input_shape, latent_dim, hidden_dims, activation="ReLU"):
+    def __init__(self, input_shape, latent_dim, hidden_dims, activation="ReLU",normalize=True):
         super(ConvAutoencoder, self).__init__()
         channels, height, width = input_shape
         act_fn = get_activation(activation)
@@ -53,7 +53,11 @@ class ConvAutoencoder(nn.Module):
 
         # 最終出力層
         decoder_layers.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=3, stride=2, padding=1, output_padding=1))
-        decoder_layers.append(nn.Sigmoid())  # 出力を [0,1] に
+        
+        if normalize:
+            decoder_layers.append(nn.Tanh())  # 正規化を行う場合はTanhを使用
+        else:
+            decoder_layers.append(nn.Sigmoid())
 
         self.decoder = nn.Sequential(*decoder_layers)
 
